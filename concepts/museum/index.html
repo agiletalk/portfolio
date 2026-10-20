@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="" />
+  <meta name="color-scheme" content="light" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Crect width=%2216%22 height=%2216%22 rx=%223%22 fill=%22%231c1a17%22/%3E%3Crect x=%224%22 y=%229%22 width=%222%22 height=%223%22 fill=%22%23f1ede4%22/%3E%3Crect x=%227%22 y=%226%22 width=%222%22 height=%226%22 fill=%22%23f1ede4%22/%3E%3Crect x=%2210%22 y=%224%22 width=%222%22 height=%228%22 fill=%22%23a8402a%22/%3E%3C/svg%3E" />
+  <title>Commit Museum</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="../../src/fonts/pretendard.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Noto+Serif+KR:wght@400;600;700&display=swap" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <header class="wayfinder" id="wayfinder">
+    <a class="brand" href="#top"><span class="brand-glyph" aria-hidden="true">&lt;°)))&gt;&lt;</span><span class="brand-name">Commit Museum</span></a>
+    <nav class="floor-plan" aria-label="Museum">
+      <a href="#about" data-nav="about"></a>
+      <a href="#career" data-nav="career"></a>
+      <a href="#projects" data-nav="projects"></a>
+      <a href="#contact" data-nav="contact"></a>
+    </nav>
+    <div class="wayfinder-tools">
+      <a class="back" href="../index.html" data-ui="backToConcepts"></a>
+      <button class="lang" type="button" data-lang-toggle></button>
+    </div>
+    <span class="progress" aria-hidden="true"><span class="progress-bar"></span></span>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="stage" id="stage">
+        <canvas class="field" id="field" aria-hidden="true"></canvas>
+        <ol class="axis" id="axis"></ol>
+      </div>
+      <div class="hero-placard" id="hero-placard"></div>
+    </section>
+
+    <p class="rm-note" id="rm-note" hidden></p>
+
+    <section class="room about" id="about" aria-labelledby="about-title"></section>
+    <section class="room career" id="career" aria-labelledby="career-title"></section>
+    <section class="room projects" id="projects" aria-labelledby="projects-title"></section>
+    <section class="room skills" id="skills" aria-labelledby="skills-title"></section>
+    <section class="room contact" id="contact" aria-labelledby="contact-title"></section>
+  </main>
+
+  <footer class="exit" id="exit"></footer>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>

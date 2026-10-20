@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="description" content="" />
+  <meta name="theme-color" content="#7fd3d1" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22%3E%3Ccircle cx=%228%22 cy=%228%22 r=%226%22 fill=%22%237fd3d1%22/%3E%3C/svg%3E" />
+  <title>Deep Dive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" />
+  <link rel="stylesheet" href="../../src/fonts/pretendard.css" />
+</head>
+<body>
+  <!-- 고정 레이어: 물빛(caustics) → 물고기 떼·부유물 -->
+  <div class="fx" aria-hidden="true">
+    <canvas class="fx__caustics" id="caustics"></canvas>
+    <canvas class="fx__school" id="school"></canvas>
+  </div>
+
+  <header class="top">
+    <a class="top__back" id="back" href="../index.html"><span aria-hidden="true">←</span> <span data-t="back"></span></a>
+    <nav class="top__nav" aria-label="Sections">
+      <a href="#about" data-t="nav.about"></a>
+      <a href="#projects" data-t="nav.projects"></a>
+      <a href="#career" data-t="nav.career"></a>
+      <a href="#contact" data-t="nav.contact"></a>
+    </nav>
+    <button class="top__lang" type="button" data-lang-toggle></button>
+  </header>
+
+  <aside class="gauge" aria-hidden="true">
+    <div class="gauge__rail"><div class="gauge__fill" id="gaugeFill"></div><div class="gauge__dot" id="gaugeDot"></div></div>
+    <div class="gauge__read"><span id="gaugeDepth">−0m</span><span class="gauge__sep">·</span><span id="gaugeYear">2026</span></div>
+  </aside>
+
+  <main id="top">
+    <p class="rm-note" id="rmNote" hidden></p>
+
+    <!-- 수면: 2026 -->
+    <section class="hero" id="hero" aria-labelledby="heroName">
+      <div class="hero__inner" id="heroInner">
+        <p class="hero__depth" aria-hidden="true"><span class="mono">0m</span> <span class="mono" id="heroYear"></span></p>
+        <h1 class="hero__name" id="heroName" data-t="name"></h1>
+        <p class="hero__role" data-t="role"></p>
+        <p class="hero__intro" data-t="intro"></p>
+      </div>
+      <a class="hero__hint" href="#about"><span data-t="scrollHint"></span><span class="hero__hint-line" aria-hidden="true"></span></a>
+    </section>
+
+    <section class="band about" id="about" aria-labelledby="aboutH">
+      <div class="band__label mono" aria-hidden="true">−<span data-depth></span>m</div>
+      <h2 class="band__title" id="aboutH" data-t="nav.about" data-reveal></h2>
+      <div class="about__grid">
+        <div class="about__bio" id="bio" data-reveal></div>
+        <dl class="stats" id="stats" data-reveal></dl>
+      </div>
+      <div class="skills" id="skills" data-reveal></div>
+    </section>
+
+    <section class="band projects" id="projects" aria-labelledby="projectsH">
+      <div class="band__label mono" aria-hidden="true">−<span data-depth></span>m</div>
+      <h2 class="band__title" id="projectsH" data-t="nav.projects" data-reveal></h2>
+      <div class="tank" id="tank">
+        <canvas class="tank__canvas" id="tankCanvas" aria-hidden="true"></canvas>
+      </div>
+      <ul class="species" id="species"></ul>
+    </section>
+
+    <section class="band career" id="career" aria-labelledby="careerH">
+      <div class="band__label mono" aria-hidden="true">−<span data-depth></span>m</div>
+      <h2 class="band__title" id="careerH" data-t="nav.career" data-reveal></h2>
+      <ol class="strata" id="strata"></ol>
+    </section>
+
+    <!-- 해저: 2010 -->
+    <section class="band contact" id="contact" aria-labelledby="contactH">
+      <div class="band__label mono" aria-hidden="true">−<span data-depth></span>m</div>
+      <h2 class="contact__title" id="contactH" data-reveal></h2>
+      <p class="contact__body" id="contactBody" data-reveal></p>
+      <a class="contact__mail" id="mail" href="#" data-reveal></a>
+      <ul class="contact__links" id="contactLinks" data-reveal></ul>
+      <p class="contact__loc mono" id="loc"></p>
+      <svg class="seabed" viewBox="0 0 1440 260" preserveAspectRatio="none" aria-hidden="true">
+        <g class="kelp">
+          <path class="kelp__s kelp__s--1" d="M140 260 C 120 200, 170 160, 140 100 S 160 30, 150 0" />
+          <path class="kelp__s kelp__s--2" d="M190 260 C 210 210, 170 170, 200 120 S 180 60, 196 30" />
+          <path class="kelp__s kelp__s--3" d="M1230 260 C 1250 190, 1200 150, 1236 90 S 1210 40, 1226 10" />
+          <path class="kelp__s kelp__s--1" d="M1290 260 C 1270 220, 1310 180, 1286 130" />
+        </g>
+        <path class="seabed__far" d="M0 190 C 200 160, 380 210, 620 180 S 1040 150, 1240 176 S 1400 190, 1440 170 V260 H0Z" />
+        <path class="seabed__near" d="M0 222 C 240 200, 460 238, 760 214 S 1160 196, 1440 220 V260 H0Z" />
+      </svg>
+    </section>
+  </main>
+
+  <dialog class="card" id="card" data-lenis-prevent aria-labelledby="cardName">
+    <form method="dialog" class="card__close-form"><button class="card__close" type="submit" aria-keyshortcuts="Escape"><span aria-hidden="true">✕</span></button></form>
+    <p class="card__glyph mono" id="cardGlyph"></p>
+    <p class="card__year mono" id="cardYear"></p>
+    <h3 class="card__name" id="cardName"></h3>
+    <p class="card__tagline" id="cardTagline"></p>
+    <p class="card__desc" id="cardDesc"></p>
+    <ul class="card__stack" id="cardStack"></ul>
+    <ul class="card__links" id="cardLinks"></ul>
+  </dialog>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>

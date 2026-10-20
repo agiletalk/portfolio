@@ -1,0 +1,8 @@
+node_modules
+dist
+*.log
+HANDOFF-*.md
+docs/HANDOFF-*.md
+dist-*
+shots
+.DS_Store
