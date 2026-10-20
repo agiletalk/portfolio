@@ -4,6 +4,7 @@
 // and a tap drops food that fish race to.
 
 import { createLoop, dpr, fitCanvas, pick, prefersReducedMotion } from '../src/lib/motion'
+import { onThemeChange, type Scheme } from '../src/theme'
 
 export interface Species {
   glyph: string
@@ -22,7 +23,7 @@ interface Fish {
   ty: number
   base: number
   z: number // depth 0.55..1 (alpha + speed)
-  color: string
+  color: number // index into the theme's fish palette
   phase: number
   nextWander: number
   startle: number
@@ -33,7 +34,7 @@ interface Bubble { x: number; y: number; y0: number; vy: number; phase: number }
 interface Pop { x: number; y: number; age: number }
 interface Food { x: number; y: number; vy: number; phase: number; settled: number; ch: string }
 interface Ripple { x: number; y: number; t0: number; amp: number }
-interface Weed { col: number; h: number; phase: number; color: string }
+interface Weed { col: number; h: number; phase: number; color: number }
 interface Speck { x: number; y: number; vx: number; vy: number; ch: string; a: number }
 
 const MIRROR: Record<string, string> = { '<': '>', '>': '<', '(': ')', ')': '(', '[': ']', ']': '[', '{': '}', '}': '{', '/': '\\', '\\': '/' }
@@ -50,10 +51,57 @@ function facesRight(g: string): boolean {
   return true
 }
 
-const PALETTE = ['#f2c46d', '#7ee0b5', '#82b8ff', '#f5a3c7', '#b9a2ff', '#ffd29b', '#9fe3ff', '#ff9f8f']
-const WEEDS = ['#4fae7c', '#5fbf8a', '#3f9a6d', '#6fcf97']
-const SAND = '#b59a6a'
-const WATER = '#7fb6c9'
+interface Palette {
+  fish: string[]
+  weeds: string[]
+  sand: string
+  water: string // specks + troughs of the ripple layer
+  crest: string // crests of the ripple layer
+  surface: string
+  label: string
+  bubble: string
+  pop: string
+  food: string
+  /** alpha for a fish at depth z (0.5..1) */
+  fishAlpha(z: number): number
+  /** multiplier for faint layers (specks, ripples, sand top) */
+  faint: number
+  bubbleAlpha: number
+}
+
+// dark: the original glow-on-black colors, unchanged
+const DARK: Palette = {
+  fish: ['#f2c46d', '#7ee0b5', '#82b8ff', '#f5a3c7', '#b9a2ff', '#ffd29b', '#9fe3ff', '#ff9f8f'],
+  weeds: ['#4fae7c', '#5fbf8a', '#3f9a6d', '#6fcf97'],
+  sand: '#b59a6a',
+  water: '#7fb6c9',
+  crest: '#9fe3ff',
+  surface: '#9fd4e6',
+  label: '#dfe4ea',
+  bubble: '#bfe9f7',
+  pop: '#e8f8ff',
+  food: '#f2c46d',
+  fishAlpha: (z) => 0.35 + z * 0.65,
+  faint: 1,
+  bubbleAlpha: 0.75,
+}
+
+// light: ink on a pale aqua/paper tank; every glyph color ≥ 3:1 on the tank
+const LIGHT: Palette = {
+  fish: ['#8F5300', '#17704C', '#2356A3', '#A8336A', '#6343B8', '#9A4A12', '#0B6683', '#A93A2A'],
+  weeds: ['#2F7350', '#3A805A', '#245F44', '#3F8058'],
+  sand: '#7D6236',
+  water: '#3A7489',
+  crest: '#1F6A85',
+  surface: '#2F7590',
+  label: '#2C2825',
+  bubble: '#2F7590',
+  pop: '#2A6F88',
+  food: '#8F5300',
+  fishAlpha: (z) => 0.6 + z * 0.4,
+  faint: 1.35,
+  bubbleAlpha: 0.8,
+}
 const RAMP = ['.', '·', ':', '-', '~', '=', '≈']
 
 export interface Aquarium {
@@ -66,6 +114,7 @@ export function createAquarium(
   onGrid?: (cols: number, rows: number) => void,
 ): Aquarium {
   const ctx = canvas.getContext('2d')!
+  let C: Palette = DARK
   const reduced = prefersReducedMotion()
   let fontSize = 14
   let cw = 8.4
@@ -124,7 +173,7 @@ export function createAquarium(
     const n = Math.max(3, Math.round(cols / 11))
     for (let i = 0; i < n; i++) {
       const col = Math.round(((i + rand(0.2, 0.8)) / n) * (cols - 2)) + 1
-      weeds.push({ col, h: Math.round(rand(3, Math.max(4, Math.min(9, rows * 0.42)))), phase: rand(0, 6.28), color: WEEDS[i % WEEDS.length] })
+      weeds.push({ col, h: Math.round(rand(3, Math.max(4, Math.min(9, rows * 0.42)))), phase: rand(0, 6.28), color: i })
     }
     sandRow = Array.from({ length: cols }, () => {
       const r = Math.random()
@@ -152,7 +201,7 @@ export function createAquarium(
         fish.push({
           right, left, len: Array.from(right).length, name: sp.name,
           x: rand(4, cols - 4), y: rand(2, rows - 4), vx: dir * base, dir, ty: rand(2, rows - 4),
-          base, z, color: PALETTE[i % PALETTE.length], phase: rand(0, 6.28), nextWander: rand(1, 4), startle: 0, label: 0,
+          base, z, color: i, phase: rand(0, 6.28), nextWander: rand(1, 4), startle: 0, label: 0,
         })
       }
       fish.sort((a, b) => a.z - b.z)
@@ -336,18 +385,18 @@ export function createAquarium(
           const a = Math.abs(h)
           if (a < 0.14) continue
           const idx = Math.min(RAMP.length - 1, Math.floor(a * RAMP.length * 0.9))
-          put(RAMP[idx], c, r, h > 0 ? '#9fe3ff' : WATER, Math.min(0.55, a * 0.6), false)
+          put(RAMP[idx], c, r, h > 0 ? C.crest : C.water, Math.min(0.55, a * 0.6 * C.faint), false)
         }
       }
     }
 
-    for (const s of specks) put(s.ch, Math.floor(s.x), s.y, WATER, s.a)
+    for (const s of specks) put(s.ch, Math.floor(s.x), s.y, C.water, Math.min(0.5, s.a * C.faint))
 
     // surface
     for (let c = 0; c < cols; c++) {
       const w = Math.sin(c * 0.33 - t * 1.4) + Math.sin(c * 0.11 + t * 0.7) * 0.6
       const ch = w > 1.05 ? '^' : w < -1.1 ? '-' : '~'
-      put(ch, c, 0.15 + w * 0.08, '#9fd4e6', 0.5 + w * 0.12)
+      put(ch, c, 0.15 + w * 0.08, C.surface, 0.5 + w * 0.12)
     }
 
     // seaweed: alternating ( ) that flip and sway more toward the tip
@@ -356,7 +405,7 @@ export function createAquarium(
         const row = rows - 2 - k
         const flip = (k + Math.floor(t * 1.4 + wd.phase)) % 2
         const sway = Math.sin(t * 1.1 + wd.phase + k * 0.45) * (k / wd.h) * 1.1
-        put(flip ? '(' : ')', wd.col + sway, row, wd.color, 0.65 + 0.35 * (k / wd.h))
+        put(flip ? '(' : ')', wd.col + sway, row, C.weeds[wd.color % C.weeds.length], 0.65 + 0.35 * (k / wd.h))
       }
     }
 
@@ -366,27 +415,27 @@ export function createAquarium(
       const chars = Array.from(g)
       const left = f.x - f.len / 2
       const bob = Math.sin(t * 1.6 + f.phase) * 0.12
-      for (let i = 0; i < chars.length; i++) put(chars[i], left + i, f.y + bob, f.color, 0.35 + f.z * 0.65)
+      for (let i = 0; i < chars.length; i++) put(chars[i], left + i, f.y + bob, C.fish[f.color % C.fish.length], C.fishAlpha(f.z))
       if (f.label > 0.01) {
         const name = f.name
         const lx = Math.max(0, Math.min(cols - name.length, Math.round(f.x - name.length / 2)))
-        for (let i = 0; i < name.length; i++) put(name[i], lx + i, f.y - 1 + bob, '#dfe4ea', 0.7 * Math.min(1, f.label * 2))
+        for (let i = 0; i < name.length; i++) put(name[i], lx + i, f.y - 1 + bob, C.label, 0.7 * Math.min(1, f.label * 2))
       }
     }
 
     for (const b of bubbles) {
       const p = (b.y0 - b.y) / Math.max(1, b.y0 - 1)
       const ch = p < 0.2 ? '.' : p < 0.45 ? '°' : p < 0.75 ? 'o' : 'O'
-      put(ch, b.x, b.y, '#bfe9f7', 0.75)
+      put(ch, b.x, b.y, C.bubble, C.bubbleAlpha)
     }
-    for (const p of pops) put(p.age < 0.15 ? '*' : '·', p.x, p.y, '#e8f8ff', 1 - p.age / 0.35)
+    for (const p of pops) put(p.age < 0.15 ? '*' : '·', p.x, p.y, C.pop, 1 - p.age / 0.35)
 
-    for (const p of food) put(p.ch, p.x, p.y, '#f2c46d', p.settled > 5 ? (7 - p.settled) / 2 : 1)
+    for (const p of food) put(p.ch, p.x, p.y, C.food, p.settled > 5 ? (7 - p.settled) / 2 : 1)
 
     // sand bed
     for (let c = 0; c < cols; c++) {
-      put(sandTop[c], c, rows - 2, SAND, 0.45)
-      put(sandRow[c], c, rows - 1, SAND, sandRow[c] === 'º' ? 0.9 : 0.7)
+      put(sandTop[c], c, rows - 2, C.sand, Math.min(0.8, 0.45 * C.faint))
+      put(sandRow[c], c, rows - 1, C.sand, sandRow[c] === 'º' ? 0.9 : 0.7)
     }
     ctx.globalAlpha = 1
   }
@@ -445,9 +494,17 @@ export function createAquarium(
   })
 
   let destroyed = false
+  let booted = false
+  // repaint in the new palette right away, even when the loop is idle
+  // (reduced motion, off-screen, or before the first animated frame)
+  const offTheme = onThemeChange((s: Scheme) => {
+    C = s === 'light' ? LIGHT : DARK
+    if (booted && W) draw()
+  })
   const boot = () => {
     if (destroyed) return
     fit(true)
+    booted = true
     ro.observe(canvas)
     if (reduced) {
       // one still frame: a few seconds into the scene so everything is placed
@@ -475,6 +532,7 @@ export function createAquarium(
   return {
     destroy() {
       destroyed = true
+      offTheme()
       loop.stop()
       ro.disconnect()
       canvas.removeEventListener('pointermove', onMove)

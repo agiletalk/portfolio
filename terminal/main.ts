@@ -1,6 +1,7 @@
 import Lenis from 'lenis'
 import type { Content } from '../src/content/types'
 import { bindLangToggle, onLangChange } from '../src/i18n'
+import { bindThemeToggle } from '../src/theme'
 import { createLoop, prefersReducedMotion } from '../src/lib/motion'
 import { createAquarium } from './aquarium'
 import { decode, run, setTyped, typeInto, wait } from './fx'
@@ -336,6 +337,8 @@ function renderAll(c: Content) {
 // ---------------------------------------------------------------- wiring
 
 bindLangToggle($('[data-lang-toggle]'))
+const themeToggle = bindThemeToggle($('[data-theme-toggle]'))
+onLangChange(() => themeToggle.relabel())
 onLangChange(renderAll)
 
 $('#out-projects').addEventListener('click', (e) => {
